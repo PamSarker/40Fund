@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AGM Controller</title>
+    <script src="https://cdn.ably.com/lib/ably.min-1.js"></script>
+    <style>
+        body { font-family: sans-serif; background: #121212; color: white; padding: 10px; }
+        .btn-group { display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 20px; padding: 10px; background: #1e1e1e; border-radius: 10px; }
+        button { flex: 1 1 30%; padding: 15px 5px; font-size: 12px; font-weight: bold; border: none; border-radius: 5px; background: #38bdf8; color: #000; }
+        button:active { background: #fff; }
+        h4 { margin: 5px 0; color: #888; text-transform: uppercase; font-size: 10px; }
+    </style>
+</head>
+<body>
+    <h3>Manager Console</h3>
+    <div id="controls"></div>
+
+    <script>
+        const ably = new Ably.Realtime('592Mdw.WSZQZg');
+        const channel = ably.channels.get('agm-votes');
+
+        const resolutions = [
+            { id: 'r1', name: 'Strategy', options: ['Cash', 'Bonds', 'Stocks'] },
+            { id: 'r2', name: 'Interest', options: ['Social', 'Units', 'Fee'] },
+            { id: 'r3', name: 'Veto', options: ['Token', 'Tax'] },
+            { id: 'r4', name: 'Floor Rule', options: ['Approve', 'Reject'] },
+            { id: 'r5', name: 'Window', options: ['May-Jul', 'Aug-Oct'] },
+            { id: 'r6', name: 'Recruit', options: ['Closed', 'Open'] }
+        ];
+
+        resolutions.forEach(res => {
+            const div = document.createElement('div');
+            div.innerHTML = `<h4>${res.name}</h4><div class="btn-group"></div>`;
+            res.options.forEach((opt, idx) => {
+                const btn = document.createElement('button');
+                btn.innerText = opt;
+                btn.onclick = () => channel.publish('update', { resId: res.id, index: idx });
+                div.querySelector('.btn-group').appendChild(btn);
+            });
+            document.getElementById('controls').appendChild(div);
+        });
+    </script>
+</body>
+</html>
