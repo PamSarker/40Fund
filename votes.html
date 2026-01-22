@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>40 Fund AGM | LIVE DISPLAY</title>
+    <script src="https://cdn.ably.com/lib/ably.min-1.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        body { font-family: 'Segoe UI', sans-serif; background: #0f172a; color: white; display: flex; flex-direction: column; align-items: center; padding: 20px; }
+        .grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 20px; width: 100%; max-width: 1200px; }
+        .card { background: #1e293b; padding: 20px; border-radius: 12px; border: 1px solid #334155; }
+        h1 { color: #38bdf8; text-transform: uppercase; }
+        canvas { max-height: 250px; }
+    </style>
+</head>
+<body>
+    <h1>🔥 40 Fund AGM: Live Results</h1>
+    <div class="grid" id="chartGrid"></div>
+
+    <script>
+        const ably = new Ably.Realtime('592Mdw.WSZQZg');
+        const channel = ably.channels.get('agm-votes');
+        const voteData = { r1: [0,0,0], r2: [0,0,0], r3: [0,0], r4: [0,0], r5: [0,0], r6: [0,0] };
+        const charts = {};
+
+        const setup = (id, title, labels, colors) => {
+            const container = document.getElementById('chartGrid');
+            const card = document.createElement('div');
+            card.className = 'card';
+            card.innerHTML = `<h3>${title}</h3><canvas id="${id}"></canvas>`;
+            container.appendChild(card);
+            
+            charts[id] = new Chart(document.getElementById(id), {
+                type: 'bar',
+                data: { labels, datasets: [{ data: [0,0,0], backgroundColor: colors }] },
+                options: { scales: { y: { beginAtZero: true, ticks: { stepSize: 1 } } }, plugins: { legend: { display: false } } }
+            });
+        };
+
+        setup('r1', 'Treasury Strategy', ['Cash', 'Bonds', 'Stocks'], '#38bdf8');
+        setup('r2', 'Interest Allocation', ['Social', 'Units', 'Fee'], '#818cf8');
+        setup('r3', 'Veto Guardrail', ['Token', 'Tax'], '#fbbf24');
+        setup('r4', 'The £50 Floor', ['Approve', 'Reject'], '#2dd4bf');
+        setup('r5', '2028 Window', ['Spring/Sum', 'Late/Aut'], '#f472b6');
+        setup('r6', 'Recruitment', ['Closed', 'Open'], '#94a3b8');
+
+        channel.subscribe('update', (msg) => {
+            const { resId, index } = msg.data;
+            voteData[resId][index]++;
+            charts[resId].data.datasets[0].data = voteData[resId];
+            charts[resId].update();
+        });
+    </script>
+</body>
+</html>
